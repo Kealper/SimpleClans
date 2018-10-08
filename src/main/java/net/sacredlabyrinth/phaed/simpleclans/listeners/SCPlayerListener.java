@@ -135,6 +135,10 @@ public class SCPlayerListener implements Listener {
      */
     @EventHandler(priority = EventPriority.HIGH)
     public void onPlayerChat(AsyncPlayerChatEvent event) {
+		if (event.isCancelled()) {
+			return;
+		}
+
         if (plugin.getSettingsManager().isBlacklistedWorld(event.getPlayer().getLocation().getWorld().getName())) {
             return;
         }
