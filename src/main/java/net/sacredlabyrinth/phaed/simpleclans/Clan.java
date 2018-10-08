@@ -376,7 +376,7 @@ public class Clan implements Serializable, Comparable<Clan> {
         bb.add(msg);
         SimpleClans.getInstance().getStorageManager().updateClan(this);
     }
-    
+
     /**
      * Adds a bulletin board message without announcer
      *
@@ -1129,6 +1129,7 @@ public class Clan implements Serializable, Comparable<Clan> {
         cp.setLeader(false);
         cp.setTrusted(false);
         cp.setJoinDate(0);
+		cp.setRank("");
         removeMember(playerName);
 
         SimpleClans.getInstance().getStorageManager().updateClanPlayer(cp);
@@ -1161,6 +1162,7 @@ public class Clan implements Serializable, Comparable<Clan> {
         cp.setLeader(false);
         cp.setTrusted(false);
         cp.setJoinDate(0);
+		cp.setRank("");
         removeMember(playerUniqueId);
 
         SimpleClans.getInstance().getStorageManager().updateClanPlayer(cp);
@@ -1472,7 +1474,7 @@ public class Clan implements Serializable, Comparable<Clan> {
             clanAnnounce(announcerName, SimpleClans.getInstance().getSettingsManager().getBbAccentColor() + "* " + SimpleClans.getInstance().getSettingsManager().getBbColor() + Helper.parseColors(msg));
         }
     }
-    
+
     /**
      * Add a new bb message and announce it to all online members of a clan
      *
