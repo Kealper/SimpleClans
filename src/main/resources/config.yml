@@ -44,12 +44,7 @@ settings:
     server-name: '&4SimpleClans'
     new-clan-verification-required: true
     allow-regroup-command: true
-spout:
-    in-game-tags: true
-    alert-url: ''
-    default-cape-url: http://i.imgur.com/pjqV6.png
-    enable-clan-capes: true
-    in-game-tags-colored: false
+    allow-reset-kdr: false
 commands:
     more: more
     ally: ally
@@ -57,6 +52,7 @@ commands:
     accept: accept
     deny: deny
     global: global
+    clan_chat: "."
     force-priority: true
 economy:
     creation-price: 100.0
@@ -69,8 +65,14 @@ economy:
     purchase-home-teleport: false
     home-teleport-set-price: 5.0
     purchase-home-teleport-set: false
+    home-regroup-price: 5.0
+    purchase-home-regroup: false
+    unique-tax-on-regroup: true
+    issuer-pays-regroup: true
     money-per-kill: false
     money-per-kill-kdr-multipier: 10
+    purchase-reset-kdr: true
+    reset-kdr-price: 10000.0
 kill-weights:
     rival: 2.0
     civilian: 0.0
@@ -97,19 +99,13 @@ page:
     separator: '-'
     size: 100
 clanchat:
-    rank.color: e
-    tag-based-clan-chat: false
-    name-color: e
-    player-bracket:
-        left: '<'
-        right: '>'
-    announcement-color: e
-    message-color: b
-    tag-bracket:
-        color: e
-        left: '['
-        right: ']'
     enable: true
+    tag-based-clan-chat: false
+    announcement-color: e
+    format: "&b[%clan%&b] &4<%nick-color%%player%&4> %rank%: &b%message%"
+    rank: "&f[%rank%&f]"
+    leader-color: '4'
+    member-color: 'f'
 request:
     message-color: b
     ask-frequency-secs: 60
@@ -120,17 +116,11 @@ bb:
     show-on-login: true
     size: 6
 allychat:
-    tag-color: b
-    name-color: f
-    player-bracket:
-        left: <
-        right: '>'
-    message-color: '3'
-    tag-bracket:
-        color: '8'
-        left: '['
-        right: ']'
     enable: true
+    format: "&b[Ally Chat] &4<%clan%&4> <%nick-color%%player%&4> %rank%: &b%message%"
+    rank: "&f[%rank%&f]"
+    leader-color: '4'
+    member-color: 'f'
 purge:
     inactive-player-data-days: 30
     inactive-clan-days: 7

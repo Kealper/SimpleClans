@@ -41,7 +41,6 @@ public class ToggleCommand {
                         if (cp.isCapeEnabled()) {
                             ChatBlock.sendMessage(player, ChatColor.AQUA + plugin.getLang("capeoff"));
                             cp.setCapeEnabled(false);
-                            plugin.getSpoutPluginManager().clearCape(player);
                         } else {
                             ChatBlock.sendMessage(player, ChatColor.AQUA + plugin.getLang("capeon"));
                             cp.setCapeEnabled(true);
@@ -58,7 +57,7 @@ public class ToggleCommand {
         }
 
         if (cmd.equalsIgnoreCase("bb") && plugin.getPermissionsManager().has(player, "simpleclans.member.bb-toggle")) {
-        	ClanPlayer cp = plugin.getClanManager().getClanPlayer(player);
+            ClanPlayer cp = plugin.getClanManager().getClanPlayer(player);
 
             if (cp != null) {
                 Clan clan = cp.getClan();
@@ -77,7 +76,7 @@ public class ToggleCommand {
         }
 
         if (cmd.equalsIgnoreCase("tag") && plugin.getPermissionsManager().has(player, "simpleclans.member.tag-toggle")) {
-        	ClanPlayer cp = plugin.getClanManager().getClanPlayer(player);
+            ClanPlayer cp = plugin.getClanManager().getClanPlayer(player);
 
             if (cp != null) {
                 Clan clan = cp.getClan();
@@ -96,13 +95,19 @@ public class ToggleCommand {
         }
 
         if (cmd.equalsIgnoreCase("deposit") && plugin.getPermissionsManager().has(player, "simpleclans.leader.deposit-toggle")) {
-        	ClanPlayer cp = plugin.getClanManager().getClanPlayer(player);
+            ClanPlayer cp = plugin.getClanManager().getClanPlayer(player);
 
             if (cp != null) {
                 Clan clan = cp.getClan();
                 if (clan.isLeader(player)) {
                     if (clan.isVerified()) {
-                        clan.setAllowDeposit(!clan.isAllowDeposit());
+                    	if (clan.isAllowDeposit()) {
+	                    	ChatBlock.sendMessage(player, ChatColor.AQUA + plugin.getLang("depositoff"));
+	                    	clan.setAllowDeposit(false);
+                    	} else {
+	                    	ChatBlock.sendMessage(player, ChatColor.AQUA + plugin.getLang("depositon"));
+	                    	clan.setAllowDeposit(true);
+                    	}
                     }
                 } else {
                     ChatBlock.sendMessage(player, ChatColor.RED + plugin.getLang("no.leader.permissions"));
@@ -111,12 +116,18 @@ public class ToggleCommand {
         }
 
         if (cmd.equalsIgnoreCase("withdraw") && plugin.getPermissionsManager().has(player, "simpleclans.leader.withdraw-toggle")) {
-        	ClanPlayer cp = plugin.getClanManager().getClanPlayer(player);
+            ClanPlayer cp = plugin.getClanManager().getClanPlayer(player);
             if (cp != null) {
                 Clan clan = cp.getClan();
                 if (clan.isVerified()) {
                     if (clan.isLeader(player)) {
-                        clan.setAllowWithdraw(!clan.isAllowWithdraw());
+                    	if (clan.isAllowWithdraw()) {
+	                    	ChatBlock.sendMessage(player, ChatColor.AQUA + plugin.getLang("withdrawoff"));
+	                    	clan.setAllowWithdraw(false);
+                    	} else {
+	                    	ChatBlock.sendMessage(player, ChatColor.AQUA + plugin.getLang("withdrawon"));
+	                    	clan.setAllowWithdraw(true);
+                    	}
                     } else {
                         ChatBlock.sendMessage(player, ChatColor.RED + plugin.getLang("no.leader.permissions"));
                     }

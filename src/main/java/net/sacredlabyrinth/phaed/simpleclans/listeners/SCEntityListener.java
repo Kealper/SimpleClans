@@ -47,6 +47,11 @@ public class SCEntityListener implements Listener
                 return;
             }
 
+            if (victim.hasMetadata("NPC"))
+            {
+                return;
+            }
+
             Player attacker = null;
 
             // find attacker
@@ -292,6 +297,13 @@ public class SCEntityListener implements Listener
                     // clan ff enabled, allow damage
 
                     if (vclan.isFriendlyFire())
+                    {
+                        return;
+                    }
+                    
+                    // global ff enabled, allow damage
+                    
+                    if (plugin.getSettingsManager().isGlobalff())
                     {
                         return;
                     }
