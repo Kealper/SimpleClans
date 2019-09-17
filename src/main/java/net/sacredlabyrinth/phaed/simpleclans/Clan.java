@@ -412,6 +412,20 @@ public class Clan implements Serializable, Comparable<Clan> {
     }
 
     /**
+     * Adds a bulletin board message without announcer
+     *
+     * @param msg
+     */
+    public void addBb(String msg) {
+        while (bb.size() > SimpleClans.getInstance().getSettingsManager().getBbSize()) {
+            bb.remove(0);
+        }
+
+        bb.add(System.currentTimeMillis() + "_" + msg);
+        SimpleClans.getInstance().getStorageManager().updateClan(this);
+    }
+
+    /**
      * Adds a bulletin board message without saving it to the database
      * 
      * @param msg
