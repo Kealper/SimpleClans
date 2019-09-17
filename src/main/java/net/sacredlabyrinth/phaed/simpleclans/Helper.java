@@ -5,11 +5,17 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.Map.Entry;
 import net.sacredlabyrinth.phaed.simpleclans.managers.SettingsManager;
@@ -29,6 +35,53 @@ public class Helper {
         for (StackTraceElement el : Thread.currentThread().getStackTrace()) {
             SimpleClans.debug(el.toString());
         }
+    }
+    
+    /**
+     * Converts a resign times map to a JSON String
+     * 
+     * @param resignTimes
+     * @return a JSON String
+     */
+    public static String resignTimesToJson(Map<String, Long> resignTimes) {
+    	return JSONObject.toJSONString(resignTimes);
+    }
+    
+    /**
+     * Converts a JSON String to a resign times map
+     * 
+     * @param json JSON String
+     * @return a map
+     */
+    @SuppressWarnings("unchecked")
+	public static Map<String, Long> resignTimesFromJson(String json) {
+    	if (json != null) {
+	    	try {
+				return (Map<String, Long>) new JSONParser().parse(json);
+			} catch (ParseException e) {
+				e.printStackTrace();
+			}	
+    	}
+    	return null;
+    }
+    
+    /**
+     * Returns the delay in seconds to the specified hour and minute.
+     * 
+     * @param hour hour
+     * @param minute minute
+     * @return the delay in seconds
+     */
+    public static long getDelayTo(int hour, int minute) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime d = LocalDateTime.of(now.toLocalDate(), LocalTime.of(1, 0));
+        long delay;
+        if (now.isAfter(d)) {
+            delay = now.until(d.plusDays(1), ChronoUnit.SECONDS);
+        } else {
+            delay = now.until(d, ChronoUnit.SECONDS);
+        }
+        return delay;
     }
 
     /**
@@ -625,19 +678,24 @@ public class Helper {
         String leaderColor = sm.getAllyChatLeaderColor();
         String memberColor = sm.getAllyChatMemberColor();
         String rank = cp.getRank().isEmpty() ? null : ChatColor.translateAlternateColorCodes('&', cp.getRank());
-        String rankFormat = rank != null ? ChatColor.translateAlternateColorCodes('&', sm.getAllyChatRank()).replaceAll("%rank%", rank) : "";
+        String rankFormat = rank != null ? ChatColor.translateAlternateColorCodes('&', sm.getAllyChatRank()).replace("%rank%", rank) : "";
 
-        String message = ChatColor.translateAlternateColorCodes('&', sm.getAllyChatFormat())
-                .replaceAll("%clan%", cp.getClan().getColorTag())
-                .replaceAll("%nick-color%", (cp.isLeader() ? leaderColor : memberColor))
-                .replaceAll("%player%", cp.getName())
-                .replaceAll("%rank%", rankFormat)
-                .replaceAll("%message%", msg);
+        String message = replacePlaceholders(sm.getAllyChatFormat(), cp, leaderColor, memberColor, rankFormat, msg);
         if (placeholders != null) {
             for (Entry<String, String> e : placeholders.entrySet()) {
-                message = message.replaceAll("%"+e.getKey()+"%", e.getValue());
+                message = message.replace("%"+e.getKey()+"%", e.getValue());
             }
         }
+        return message;
+    }
+
+    private static String replacePlaceholders(String messageFormat, ClanPlayer cp, String leaderColor, String memberColor, String rankFormat, String msg) {
+        String message = ChatColor.translateAlternateColorCodes('&', messageFormat)
+                .replace("%clan%", cp.getClan().getColorTag())
+                .replace("%nick-color%", (cp.isLeader() ? leaderColor : memberColor))
+                .replace("%player%", cp.getName())
+                .replace("%rank%", rankFormat)
+                .replace("%message%", msg);
         return message;
     }
 
@@ -655,17 +713,13 @@ public class Helper {
         String leaderColor = sm.getClanChatLeaderColor();
         String memberColor = sm.getClanChatMemberColor();
         String rank = cp.getRank().isEmpty() ? null : ChatColor.translateAlternateColorCodes('&', cp.getRank());
-        String rankFormat = rank != null ? ChatColor.translateAlternateColorCodes('&', sm.getClanChatRank()).replaceAll("%rank%", rank) : "";
+        String rankFormat = rank != null ? ChatColor.translateAlternateColorCodes('&', sm.getClanChatRank()).replace("%rank%", rank) : "";
 
-        String message = ChatColor.translateAlternateColorCodes('&', sm.getClanChatFormat())
-                .replaceAll("%clan%", cp.getClan().getColorTag())
-                .replaceAll("%nick-color%", (cp.isLeader() ? leaderColor : memberColor))
-                .replaceAll("%player%", cp.getName())
-                .replaceAll("%rank%", rankFormat)
-                .replaceAll("%message%", msg);
+        String message = replacePlaceholders(sm.getClanChatFormat(), cp, leaderColor, memberColor, rankFormat, msg);
+        
         if (placeholders != null) {
             for (Entry<String, String> e : placeholders.entrySet()) {
-                message = message.replaceAll("%"+e.getKey()+"%", e.getValue());
+                message = message.replace("%"+e.getKey()+"%", e.getValue());
             }
         }
         return message;

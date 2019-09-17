@@ -14,6 +14,7 @@ import java.util.*;
 import net.sacredlabyrinth.phaed.simpleclans.events.ChatEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.scheduler.BukkitRunnable;
 
 /**
  * @author phaed
@@ -91,10 +92,11 @@ public final class ClanManager {
         SimpleClans.getInstance().getPermissionsManager().updateClanPermissions(clan);
         SimpleClans.getInstance().getServer().getPluginManager().callEvent(new CreateClanEvent(clan));
     }
-    
+
     /**
      * Reset a player's kdr
-     * @param cp 
+     *
+     * @param cp
      */
     public void resetKdr(ClanPlayer cp) {
         cp.setCivilianKills(0);
@@ -110,6 +112,14 @@ public final class ClanManager {
      * @param cp
      */
     public void deleteClanPlayer(ClanPlayer cp) {
+        Clan clan = cp.getClan();
+        if (clan != null) {
+            if (SimpleClans.getInstance().hasUUID()) {
+                clan.removePlayerFromClan(cp.getUniqueId());
+            } else {
+                clan.removePlayerFromClan(cp.getName());
+            }
+        }
         clanPlayers.remove(cp.getCleanName());
         plugin.getStorageManager().deleteClanPlayer(cp);
     }
@@ -232,8 +242,7 @@ public final class ClanManager {
             return getClanPlayer(player.getName());
         }
     }
-    
-    
+
     /**
      * Gets the ClanPlayer data object if a player is currently in a clan, null
      * if he's not in a clan
@@ -545,7 +554,7 @@ public final class ClanManager {
                 out += ChatColor.WHITE + plugin.getLang("armor.h");
             } else if (h.getType().equals(Material.DIAMOND_HELMET)) {
                 out += ChatColor.AQUA + plugin.getLang("armor.h");
-            } else if (h.getType().equals(Material.GOLD_HELMET)) {
+            } else if (h.getType().equals(Material.GOLDEN_HELMET)) {
                 out += ChatColor.YELLOW + plugin.getLang("armor.h");
             } else if (h.getType().equals(Material.IRON_HELMET)) {
                 out += ChatColor.GRAY + plugin.getLang("armor.h");
@@ -564,7 +573,7 @@ public final class ClanManager {
                 out += ChatColor.WHITE + plugin.getLang("armor.c");
             } else if (c.getType().equals(Material.DIAMOND_CHESTPLATE)) {
                 out += ChatColor.AQUA + plugin.getLang("armor.c");
-            } else if (c.getType().equals(Material.GOLD_CHESTPLATE)) {
+            } else if (c.getType().equals(Material.GOLDEN_CHESTPLATE)) {
                 out += ChatColor.YELLOW + plugin.getLang("armor.c");
             } else if (c.getType().equals(Material.IRON_CHESTPLATE)) {
                 out += ChatColor.GRAY + plugin.getLang("armor.c");
@@ -583,7 +592,7 @@ public final class ClanManager {
                 out += ChatColor.WHITE + plugin.getLang("armor.l");
             } else if (l.getType().equals(Material.DIAMOND_LEGGINGS)) {
                 out += plugin.getLang("armor.l");
-            } else if (l.getType().equals(Material.GOLD_LEGGINGS)) {
+            } else if (l.getType().equals(Material.GOLDEN_LEGGINGS)) {
                 out += plugin.getLang("armor.l");
             } else if (l.getType().equals(Material.IRON_LEGGINGS)) {
                 out += plugin.getLang("armor.l");
@@ -602,7 +611,7 @@ public final class ClanManager {
                 out += ChatColor.WHITE + plugin.getLang("armor.B");
             } else if (b.getType().equals(Material.DIAMOND_BOOTS)) {
                 out += ChatColor.AQUA + plugin.getLang("armor.B");
-            } else if (b.getType().equals(Material.GOLD_BOOTS)) {
+            } else if (b.getType().equals(Material.GOLDEN_BOOTS)) {
                 out += ChatColor.YELLOW + plugin.getLang("armor.B");
             } else if (b.getType().equals(Material.IRON_BOOTS)) {
                 out += ChatColor.WHITE + plugin.getLang("armor.B");
@@ -640,7 +649,7 @@ public final class ClanManager {
             out += ChatColor.AQUA + plugin.getLang("weapon.S") + headColor + countString;
         }
 
-        count = getItemCount(inv.all(Material.GOLD_SWORD));
+        count = getItemCount(inv.all(Material.GOLDEN_SWORD));
 
         if (count > 0) {
             String countString = count > 1 ? count + "" : "";
@@ -661,7 +670,7 @@ public final class ClanManager {
             out += ChatColor.GRAY + plugin.getLang("weapon.S") + headColor + countString;
         }
 
-        count = getItemCount(inv.all(Material.WOOD_SWORD));
+        count = getItemCount(inv.all(Material.WOODEN_SWORD));
 
         if (count > 0) {
             String countString = count > 1 ? count + "" : "";
@@ -680,7 +689,7 @@ public final class ClanManager {
         count += getItemCount(inv.all(Material.TIPPED_ARROW));
 
         if (count > 0) {
-            out += ChatColor.WHITE + headColor + count;
+            out += ChatColor.WHITE + plugin.getLang("weapon.A") + headColor + count;
         }
 
         if (out.length() == 0) {
@@ -724,30 +733,30 @@ public final class ClanManager {
         count += getFoodPoints(inv, Material.CAKE, 14, 2.8);
         count += getFoodPoints(inv, Material.CARROT, 3, 3.6);
         count += getFoodPoints(inv, Material.CHORUS_FRUIT, 4, 2.4);
-        count += getFoodPoints(inv, Material.RAW_FISH, 2, 5, .2); //clownfish
         count += getFoodPoints(inv, Material.COOKED_CHICKEN, 6, 7.2);
-        count += getFoodPoints(inv, Material.COOKED_FISH, 5, 6);
         count += getFoodPoints(inv, Material.COOKED_MUTTON, 6, 9.6);
-        count += getFoodPoints(inv, Material.GRILLED_PORK, 8, 12.8);
+        count += getFoodPoints(inv, Material.COOKED_PORKCHOP, 8, 12.8);
         count += getFoodPoints(inv, Material.COOKED_RABBIT, 5, 6);
-        count += getFoodPoints(inv, Material.COOKED_FISH, 1, 6, 9.6); //salmon
+        count += getFoodPoints(inv, Material.COOKED_SALMON, 1, 6, 9.6);
         count += getFoodPoints(inv, Material.COOKIE, 2, .4);
         count += getFoodPoints(inv, Material.GOLDEN_APPLE, 4, 9.6);
         count += getFoodPoints(inv, Material.GOLDEN_CARROT, 6, 14.4);
         count += getFoodPoints(inv, Material.MELON, 2, 1.2);
-        count += getFoodPoints(inv, Material.MUSHROOM_SOUP, 6, 7.2);
+        count += getFoodPoints(inv, Material.MUSHROOM_STEW, 6, 7.2);
         count += getFoodPoints(inv, Material.POISONOUS_POTATO, 2, 1.2);
         count += getFoodPoints(inv, Material.POTATO, 1, 0.6);
-        count += getFoodPoints(inv, Material.RAW_FISH, 3, 1, 0.2); //pufferfish
+        count += getFoodPoints(inv, Material.PUFFERFISH, 3, 1, 0.2);
         count += getFoodPoints(inv, Material.PUMPKIN_PIE, 8, 4.8);
         count += getFoodPoints(inv, Material.RABBIT_STEW, 10, 12);
-        count += getFoodPoints(inv, Material.RAW_BEEF, 3, 1.8);
-        count += getFoodPoints(inv, Material.RAW_CHICKEN, 2, 1.2);
-        count += getFoodPoints(inv, Material.RAW_FISH, 0, 4, .4); //fish
+        count += getFoodPoints(inv, Material.BEEF, 3, 1.8);
+        count += getFoodPoints(inv, Material.CHICKEN, 2, 1.2);
         count += getFoodPoints(inv, Material.MUTTON, 2, 1.2);
-        count += getFoodPoints(inv, Material.PORK, 3, 1.8);
+        count += getFoodPoints(inv, Material.PORKCHOP, 3, 1.8);
         count += getFoodPoints(inv, Material.RABBIT, 3, 1.8);
-        count += getFoodPoints(inv, Material.RAW_FISH, 1, .4); //raw salmon
+        count += getFoodPoints(inv, Material.SALMON, 1, .4);
+        count += getFoodPoints(inv, Material.COD, 2, .4);
+        count += getFoodPoints(inv, Material.COOKED_COD, 5, 6);
+        count += getFoodPoints(inv, Material.TROPICAL_FISH, 1, .2);
         count += getFoodPoints(inv, Material.ROTTEN_FLESH, 4, .8);
         count += getFoodPoints(inv, Material.SPIDER_EYE, 2, 3.2);
         count += getFoodPoints(inv, Material.COOKED_BEEF, 8, 12.8);
@@ -805,6 +814,90 @@ public final class ClanManager {
         }
 
         return out;
+    }
+    
+    /**
+     * Sort clans by active
+     * 
+     * @param clans
+     * @param asc
+     */
+    public void sortClansByActive(List<Clan> clans, boolean asc) {
+    	clans.sort((c1, c2) -> {
+    	  	int o = 1;
+        	if (!asc) {
+        		o = -1;
+        	}
+        	
+    		return ((Long) c1.getLastUsed()).compareTo(c2.getLastUsed()) * o;
+    	});
+    }
+    
+    /**
+     * Sort clans by founded date
+     * 
+     * @param clans
+     * @param asc
+     */
+    public void sortClansByFounded(List<Clan> clans, boolean asc) {
+    	clans.sort((c1, c2) -> {
+    	  	int o = 1;
+        	if (!asc) {
+        		o = -1;
+        	}
+        	
+    		return ((Long) c1.getFounded()).compareTo(c2.getFounded()) * o;
+    	});
+    }
+    
+    /**
+     * Sort clans by kdr
+     * 
+     * @param clans
+     * @param asc
+     */
+    public void sortClansByKDR(List<Clan> clans, boolean asc) {
+    	clans.sort((c1, c2) -> {
+    	  	int o = 1;
+        	if (!asc) {
+        		o = -1;
+        	}
+        	
+    		return ((Float) c1.getTotalKDR()).compareTo(c2.getTotalKDR()) * o;
+    	});
+    }
+    
+    /**
+     * Sort clans by size
+     * 
+     * @param clans
+     * @param asc
+     */
+    public void sortClansBySize(List<Clan> clans, boolean asc) {
+    	clans.sort((c1, c2) -> {
+    	  	int o = 1;
+        	if (!asc) {
+        		o = -1;
+        	}
+        	
+    		return ((Integer) c1.getSize()).compareTo(c2.getSize()) * o;
+    	});
+    }
+    
+    /**
+     * Sort clans by name
+     * 
+     * @param clans
+     */
+    public void sortClansByName(List<Clan> clans, boolean asc) {
+    	clans.sort((c1, c2) -> {
+    	  	int o = 1;
+        	if (!asc) {
+        		o = -1;
+        	}
+        	
+    		return c1.getName().compareTo(c2.getName()) * o;
+    	});
     }
 
     /**
@@ -879,6 +972,32 @@ public final class ClanManager {
                 return o1.compareTo(o2);
             }
         });
+    }
+    
+    /**
+     * Purchase member fee set
+     * 
+     * @param player
+     * @return 
+     */
+    public boolean purchaseMemberFeeSet(Player player) {
+        if (!plugin.getSettingsManager().isePurchaseMemberFeeSet()) {
+            return true;
+        }
+
+        double price = plugin.getSettingsManager().geteMemberFeeSetPrice();
+        
+        if (plugin.getPermissionsManager().hasEconomy()) {
+            if (plugin.getPermissionsManager().playerHasMoney(player, price)) {
+                plugin.getPermissionsManager().playerChargeMoney(player, price);
+                player.sendMessage(ChatColor.RED + MessageFormat.format(plugin.getLang("account.has.been.debited"), price));
+            } else {
+                player.sendMessage(ChatColor.RED + plugin.getLang("not.sufficient.money"));
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -984,10 +1103,10 @@ public final class ClanManager {
 
         return true;
     }
-    
+
     /**
      * Purchase Reset Kdr
-     * 
+     *
      * @param player
      * @return
      */
@@ -995,9 +1114,9 @@ public final class ClanManager {
         if (!plugin.getSettingsManager().isePurchaseResetKdr()) {
             return true;
         }
-        
+
         double price = plugin.getSettingsManager().geteResetKdr();
-        
+
         if (plugin.getPermissionsManager().hasEconomy()) {
             if (plugin.getPermissionsManager().playerHasMoney(player, price)) {
                 plugin.getPermissionsManager().playerChargeMoney(player, price);
@@ -1082,6 +1201,7 @@ public final class ClanManager {
      * Processes a clan chat command
      *
      * @param player
+     * @param tag
      * @param msg
      */
     public void processClanChat(Player player, String tag, String msg) {
@@ -1100,8 +1220,8 @@ public final class ClanManager {
      * @param player
      * @param msg
      */
-    public void processClanChat(Player player, String msg) {
-        ClanPlayer cp = plugin.getClanManager().getClanPlayer(player.getName());
+    public void processClanChat(Player player, final String msg) {
+        final ClanPlayer cp = plugin.getClanManager().getClanPlayer(player);
 
         if (cp == null) {
             return;
@@ -1140,29 +1260,34 @@ public final class ClanManager {
                 ChatBlock.sendMessage(player, ChatColor.AQUA + "You have unmuted clan chat");
             }
         } else {
-            List<ClanPlayer> receivers = new LinkedList<>();
+            final List<ClanPlayer> receivers = new LinkedList<>();
             for (ClanPlayer p : cp.getClan().getOnlineMembers()) {
                 if (!p.isMuted()) {
                     receivers.add(p);
                 }
             }
-            
-            ChatEvent ce = new ChatEvent(msg, cp, receivers, ChatEvent.Type.CLAN);
-            Bukkit.getServer().getPluginManager().callEvent(ce);
-            
-            if (ce.isCancelled()) {
-                return;
-            }
-            
-            String message = Helper.formatClanChat(cp, ce.getMessage(), ce.getPlaceholders());
-            String eyeMessage = Helper.formatSpyClanChat(cp, message);
-            plugin.getServer().getConsoleSender().sendMessage(eyeMessage);
-            
-            for (ClanPlayer p : ce.getReceivers()) {
-                ChatBlock.sendMessage(p.toPlayer(), message);
-            }
-            
-            sendToAllSeeing(eyeMessage, ce.getReceivers());
+
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    ChatEvent ce = new ChatEvent(msg, cp, receivers, ChatEvent.Type.CLAN);
+                    Bukkit.getServer().getPluginManager().callEvent(ce);
+
+                    if (ce.isCancelled()) {
+                        return;
+                    }
+
+                    String message = Helper.formatClanChat(cp, ce.getMessage(), ce.getPlaceholders());
+                    String eyeMessage = Helper.formatSpyClanChat(cp, message);
+                    plugin.getServer().getConsoleSender().sendMessage(eyeMessage);
+
+                    for (ClanPlayer p : ce.getReceivers()) {
+                        ChatBlock.sendMessage(p.toPlayer(), message);
+                    }
+
+                    sendToAllSeeing(eyeMessage, ce.getReceivers());
+                }
+            }.runTask(plugin);
         }
     }
 
@@ -1198,8 +1323,8 @@ public final class ClanManager {
      * @param player
      * @param msg
      */
-    public void processAllyChat(Player player, String msg) {
-        ClanPlayer cp = plugin.getClanManager().getClanPlayer(player);
+    public void processAllyChat(Player player, final String msg) {
+        final ClanPlayer cp = plugin.getClanManager().getClanPlayer(player);
 
         if (cp == null) {
             return;
@@ -1238,7 +1363,7 @@ public final class ClanManager {
                 ChatBlock.sendMessage(player, ChatColor.AQUA + "You have unmuted ally chat");
             }
         } else {
-            List<ClanPlayer> receivers = new LinkedList<>();
+            final List<ClanPlayer> receivers = new LinkedList<>();
             Set<ClanPlayer> allies = cp.getClan().getAllAllyMembers();
             allies.addAll(cp.getClan().getMembers());
             for (ClanPlayer ally : allies) {
@@ -1256,23 +1381,28 @@ public final class ClanManager {
                 }
                 receivers.add(ally);
             }
-            
-            ChatEvent ce = new ChatEvent(msg, cp, receivers, ChatEvent.Type.ALLY);
-            Bukkit.getServer().getPluginManager().callEvent(ce);
-            
-            if (ce.isCancelled()) {
-                return;
-            }
-            
-            String message = Helper.formatAllyChat(cp, ce.getMessage(), ce.getPlaceholders());
-            SimpleClans.log(message);
 
-            Player self = cp.toPlayer();
-            ChatBlock.sendMessage(self, message);
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    ChatEvent ce = new ChatEvent(msg, cp, receivers, ChatEvent.Type.ALLY);
+                    Bukkit.getServer().getPluginManager().callEvent(ce);
 
-            for (ClanPlayer p : ce.getReceivers()) {
-                ChatBlock.sendMessage(p.toPlayer(), message);
-            }
+                    if (ce.isCancelled()) {
+                        return;
+                    }
+
+                    String message = Helper.formatAllyChat(cp, ce.getMessage(), ce.getPlaceholders());
+                    SimpleClans.log(message);
+
+                    Player self = cp.toPlayer();
+                    ChatBlock.sendMessage(self, message);
+
+                    for (ClanPlayer p : ce.getReceivers()) {
+                        ChatBlock.sendMessage(p.toPlayer(), message);
+                    }
+                }
+            }.runTask(plugin);
         }
     }
 

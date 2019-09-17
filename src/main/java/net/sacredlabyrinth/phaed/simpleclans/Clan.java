@@ -1,10 +1,15 @@
 package net.sacredlabyrinth.phaed.simpleclans;
 
+import net.md_5.bungee.api.chat.HoverEvent;
+import net.md_5.bungee.api.chat.TextComponent;
 import net.sacredlabyrinth.phaed.simpleclans.uuid.UUIDMigration;
 import net.sacredlabyrinth.phaed.simpleclans.events.*;
+
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.json.simple.JSONArray;
@@ -15,6 +20,7 @@ import java.io.Serializable;
 import java.sql.Timestamp;
 import java.text.MessageFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author phaed
@@ -26,7 +32,9 @@ public class Clan implements Serializable, Comparable<Clan> {
     private String tag;
     private String colorTag;
     private String name;
+    private String description;
     private double balance;
+    private double fee;
     private boolean friendlyFire;
     private long founded;
     private long lastUsed;
@@ -42,6 +50,7 @@ public class Clan implements Serializable, Comparable<Clan> {
     private String homeWorld = "";
     private boolean allowWithdraw = false;
     private boolean allowDeposit = true;
+    private boolean feeEnabled;
 
     /**
      *
@@ -152,7 +161,46 @@ public class Clan implements Serializable, Comparable<Clan> {
     public void setName(String name) {
         this.name = name;
     }
+    
+    /**
+     * Returns the clan's description
+     * 
+     * @return the description or null if it doesn't have one
+     */
+    public String getDescription() {
+		return description;
+	}
 
+    /**
+     * (used internally)
+     * 
+     * @param description
+     */
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
+	/**
+     * Sets the clan's fee
+     * 
+     * @param fee 
+     */
+    public void setMemberFee(double fee) {
+        if (fee < 0) {
+            fee = 0;
+        }
+        this.fee = fee;
+    }
+    
+    /**
+     * Returns the clan's fee
+     * 
+     * @return the fee
+     */
+    public double getMemberFee() {
+        return fee;
+    }
+    
     /**
      * Returns the clan's balance
      *
@@ -364,32 +412,27 @@ public class Clan implements Serializable, Comparable<Clan> {
     }
 
     /**
-     * Adds a bulletin board message without announcer
-     *
+     * Adds a bulletin board message without saving it to the database
+     * 
      * @param msg
      */
-    public void addBb(String msg) {
+    public void addBbWithoutSaving(String msg) {
         while (bb.size() > SimpleClans.getInstance().getSettingsManager().getBbSize()) {
             bb.remove(0);
         }
 
-        bb.add(msg);
-        SimpleClans.getInstance().getStorageManager().updateClan(this);
+        bb.add(System.currentTimeMillis() + "_" + msg);   
     }
-
+    
     /**
-     * Adds a bulletin board message without announcer
+     * Adds a bulletin board message without announcer and saves it to the database
      *
      * @param msg
      *
      * @param updateLastUsed should the clan's last used time be updated as well?
      */
     public void addBb(String msg, boolean updateLastUsed) {
-        while (bb.size() > SimpleClans.getInstance().getSettingsManager().getBbSize()) {
-            bb.remove(0);
-        }
-
-        bb.add(msg);
+        addBbWithoutSaving(msg);
         SimpleClans.getInstance().getStorageManager().updateClan(this, updateLastUsed);
     }
 
@@ -730,6 +773,30 @@ public class Clan implements Serializable, Comparable<Clan> {
         return false;
     }
 
+    /**
+     * Get all members that must pay the fee (that excludes leaders and players with the permission to bypass it)
+     * 
+     * @return the fee payers
+     */
+    public Set<ClanPlayer> getFeePayers() {
+    	Set<ClanPlayer> feePayers = new HashSet<>();
+    	
+    	getNonLeaders().forEach(cp -> {
+    		OfflinePlayer op;
+    		if (SimpleClans.getInstance().hasUUID()) {
+    			op = Bukkit.getOfflinePlayer(cp.getUniqueId());
+    		} else {
+    			op = Bukkit.getOfflinePlayer(cp.getName());
+    		}
+
+        	if (!SimpleClans.getInstance().getPermissionsManager().has(null, op, "simpleclans.member.bypass-fee")) {
+        		feePayers.add(cp);
+        	}
+    	});
+    	
+    	return feePayers;
+    }
+    
     /**
      * Get all members (leaders, and non-leaders) in the clan
      *
@@ -1343,7 +1410,34 @@ public class Clan implements Serializable, Comparable<Clan> {
 
         return false;
     }
+    
+    /**
+     * Checks if there are enough leaders online to vote
+     * 
+     * @param cp the one to demote
+     * @return true if there are
+     */
+    public boolean enoughLeadersOnlineToDemote(ClanPlayer cp) {
+        List<ClanPlayer> online = getOnlineLeaders();
+        online.remove(cp);
+        
+        double minimum = SimpleClans.getInstance().getSettingsManager().getPercentageOnlineToDemote();
+        double totalLeaders = getLeaders().size();
+        double onlineLeaders = online.size();
+        
+        
+        return ((onlineLeaders / totalLeaders) * 100) >= minimum;
+    }
 
+    /**
+     * Gets the online leaders
+     * 
+     * @return the online leaders
+     */
+    public List<ClanPlayer> getOnlineLeaders() {
+        return getOnlineMembers().stream().filter(ClanPlayer::isLeader).collect(Collectors.toList());
+    }
+    
     /**
      * Check whether all leaders of a clan are online
      *
@@ -1506,9 +1600,69 @@ public class Clan implements Serializable, Comparable<Clan> {
             }
 
             for (String msg : bb) {
-                ChatBlock.sendMessage(player, SimpleClans.getInstance().getSettingsManager().getBbAccentColor() + "* " + SimpleClans.getInstance().getSettingsManager().getBbColor() + Helper.parseColors(msg));
+                if (!sendBbTime(player, msg)) {
+                    ChatBlock.sendMessage(player, SimpleClans.getInstance().getSettingsManager().getBbAccentColor() + "* " + SimpleClans.getInstance().getSettingsManager().getBbColor() + Helper.parseColors(msg));
+                }
             }
             ChatBlock.sendBlank(player);
+        }
+    }
+
+    /**
+     * Displays bb to a player
+     * @implNote may want to refactor displaybb(Player) to use this?
+     *
+     * @param player
+     * @param maxSize amount of lines to display
+     */
+    public void displayBb(Player player, int maxSize) {
+        if (isVerified()) {
+            ChatBlock.sendBlank(player);
+            ChatBlock.saySingle(player, MessageFormat.format(SimpleClans.getInstance().getLang("bulletin.board.header"), SimpleClans.getInstance().getSettingsManager().getBbAccentColor(), SimpleClans.getInstance().getSettingsManager().getPageHeadingsColor(), Helper.capitalize(getName())));
+
+            List<String> localBb = new ArrayList<>(bb);
+            while (localBb.size() > maxSize) {
+                localBb.remove(0);
+            }
+
+            for (String msg : localBb) {
+                if (!sendBbTime(player, msg)) {
+                    ChatBlock.sendMessage(player, SimpleClans.getInstance().getSettingsManager().getBbAccentColor() + "* " + SimpleClans.getInstance().getSettingsManager().getBbColor() + Helper.parseColors(msg));
+                }
+            }
+            ChatBlock.sendBlank(player);
+        }
+    }
+
+    /**
+     * Sends a bb message with the timestamp in a hover message, if the bb message is timestamped
+     * @param msg the bb message
+     * @return true if sent
+     */
+    private boolean sendBbTime(Player player, String msg) {
+        try {
+            int index = msg.indexOf("_");
+            if (index < 1)
+                return false;
+            long time;
+            time = (System.currentTimeMillis() 
+                    - Long.parseLong(msg.substring(0, index))) / 1000L;
+            msg = String.join("", ChatBlock
+                    .getColorizedMessage(SimpleClans.getInstance()
+                            .getSettingsManager().getBbAccentColor() + "* " + 
+                            SimpleClans.getInstance().getSettingsManager()
+                                    .getBbColor() + Helper.parseColors(
+                                            msg.substring(++index, msg.length()))));
+            TextComponent textComponent = new TextComponent(msg);
+            textComponent.setHoverEvent(
+                    new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                            TextComponent.fromLegacyText(
+                                    Dates.formatTime(time, 1) + SimpleClans
+                                            .getInstance().getLang("bb.ago"))));
+            player.spigot().sendMessage(textComponent);
+            return true;
+        } catch (Throwable rock) {
+            return false;
         }
     }
 
@@ -1778,6 +1932,24 @@ public class Clan implements Serializable, Comparable<Clan> {
         }
     }
 
+    /**
+     * Checks if the fee is enabled
+     * 
+     * @return true if enabled
+     */
+    public boolean isMemberFeeEnabled() {
+        return feeEnabled;
+    }
+    
+    /**
+     * Enables or disables the fee
+     * 
+     * @param enable 
+     */
+    public void setMemberFeeEnabled(boolean enable) {
+        feeEnabled = enable;
+    }
+    
     /**
      * @return the allowWithdraw
      */

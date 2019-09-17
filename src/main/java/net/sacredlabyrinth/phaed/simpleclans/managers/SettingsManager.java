@@ -23,17 +23,27 @@ public final class SettingsManager {
     private boolean dropOnHome;
     private boolean keepOnHome;
     private boolean debugging;
-    @SuppressWarnings("FieldMayBeFinal")
-    private SimpleClans plugin;
+    private final SimpleClans plugin;
     private boolean mChatIntegration;
     private boolean pvpOnlywhileInWar;
     private boolean useColorCodeFromPrefix;
     private boolean confirmationForPromote;
     private boolean confirmationForDemote;
+    private double percentageOnlineToDemote;
     private boolean globalff;
     private boolean allowResetKdr;
     private boolean showUnverifiedOnList;
     private boolean requireVerification;
+    private boolean rejoinCooldownEnabled;
+    private int rejoinCooldown;
+    private String listDefault;
+    private String listSize;
+    private String listKdr;
+    private String listName;
+    private String listFounded;
+    private String listActive;
+    private String listAsc;
+    private String listDesc;
     private List<Integer> itemsList;
     private List<String> blacklistedWorlds;
     private List<String> bannedPlayers;
@@ -50,6 +60,11 @@ public final class SettingsManager {
     private boolean eIssuerPaysRegroup;
     private boolean ePurchaseHomeTeleportSet;
     private boolean ePurchaseResetKdr;
+    private boolean eMemberFee;
+    private boolean ePurchaseMemberFeeSet;
+    private boolean eClanUpkeepEnabled;
+    private boolean eMultiplyUpkeepBySize;
+    private boolean eChargeUpkeepOnlyIfMemberFeeEnabled;
     private double eCreationPrice;
     private double eVerificationPrice;
     private double eInvitePrice;
@@ -57,6 +72,9 @@ public final class SettingsManager {
     private double eHomeRegroupPrice;
     private double eHomeTeleportPriceSet;
     private double eResetKdr;
+    private double eMaxMemberFee;
+    private double eMemberFeeSetPrice;
+    private double eClanUpkeep;
     private String serverName;
     private boolean chatTags;
     private int purgeClan;
@@ -73,6 +91,7 @@ public final class SettingsManager {
     private String pageUnTrustedColor;
     private boolean bbShowOnLogin;
     private int bbSize;
+    private int bbLoginSize;
     private String bbColor;
     private String bbAccentColor;
     private String commandClan;
@@ -86,6 +105,8 @@ public final class SettingsManager {
     private int clanMinSizeToRival;
     private int clanMinLength;
     private int clanMaxLength;
+    private int clanMaxDescriptionLength;
+    private int clanMinDescriptionLength;
     private String pageClanNameColor;
     private int tagMinLength;
     private int tagMaxLength;
@@ -135,14 +156,13 @@ public final class SettingsManager {
     private String username;
     private String password;
     private boolean safeCivilians;
-    @SuppressWarnings("FieldMayBeFinal")
-    private File main;
-    @SuppressWarnings("FieldMayBeFinal")
-    private FileConfiguration config;
+    private final File main;
+    private final FileConfiguration config;
     private boolean compatMode;
     private boolean homebaseSetOnce;
     private int waitSecs;
     private boolean enableAutoGroups;
+    private boolean denySameIPKills;
     private boolean moneyperkill;
     private double KDRMultipliesPerKill;
     private boolean teleportBlocks;
@@ -204,6 +224,16 @@ public final class SettingsManager {
         unRivableClans = getConfig().getStringList("settings.unrivable-clans");
         showUnverifiedOnList = getConfig().getBoolean("settings.show-unverified-on-list");
         requireVerification = getConfig().getBoolean("settings.new-clan-verification-required");
+        rejoinCooldown = getConfig().getInt("settings.rejoin-cooldown");
+        rejoinCooldownEnabled = getConfig().getBoolean("settings.rejoin-cooldown-enabled");
+        listActive = getConfig().getString("list.active", "active");
+        listKdr = getConfig().getString("list.kdr", "kdr");
+        listDefault = getConfig().getString("list.default", listKdr);
+        listSize = getConfig().getString("list.size", "size");
+        listName = getConfig().getString("list.name", "name");
+        listFounded = getConfig().getString("list.founded", "founded");
+        listAsc = getConfig().getString("list.asc", "asc");
+        listDesc = getConfig().getString("list.desc", "desc");
         serverName = getConfig().getString("settings.server-name");
         chatTags = getConfig().getBoolean("settings.display-chat-tags");
         rivalLimitPercent = getConfig().getInt("settings.rival-limit-percent");
@@ -214,6 +244,8 @@ public final class SettingsManager {
         ePurchaseHomeRegroup = getConfig().getBoolean("economy.purchase-home-regroup");
         ePurchaseHomeTeleportSet = getConfig().getBoolean("economy.purchase-home-teleport-set");
         ePurchaseResetKdr = getConfig().getBoolean("economy.purchase-reset-kdr");
+        ePurchaseMemberFeeSet = getConfig().getBoolean("economy.purchase-member-fee-set");
+        eMemberFeeSetPrice = getConfig().getDouble("economy.member-fee-set-price");
         eResetKdr = getConfig().getDouble("economy.reset-kdr-price");
         eCreationPrice = getConfig().getDouble("economy.creation-price");
         eVerificationPrice = getConfig().getDouble("economy.verification-price");
@@ -223,6 +255,12 @@ public final class SettingsManager {
         eUniqueTaxOnRegroup = getConfig().getBoolean("economy.unique-tax-on-regroup");
         eIssuerPaysRegroup = getConfig().getBoolean("economy.issuer-pays-regroup");
         eHomeTeleportPriceSet = getConfig().getDouble("economy.home-teleport-set-price");
+        eMaxMemberFee = getConfig().getDouble("economy.max-member-fee");
+        eClanUpkeep = getConfig().getDouble("economy.upkeep");
+        eClanUpkeepEnabled = getConfig().getBoolean("economy.upkeep-enabled");
+        eChargeUpkeepOnlyIfMemberFeeEnabled = getConfig().getBoolean("economy.charge-upkeep-only-if-member-fee-enabled");
+        eMultiplyUpkeepBySize = getConfig().getBoolean("economy.multiply-upkeep-by-clan-size");
+        eMemberFee = getConfig().getBoolean("economy.member-fee-enabled");
         purgeClan = getConfig().getInt("purge.inactive-clan-days");
         purgeUnverified = getConfig().getInt("purge.unverified-clan-days");
         purgePlayers = getConfig().getInt("purge.inactive-player-data-days");
@@ -239,6 +277,7 @@ public final class SettingsManager {
         pageClanNameColor = getConfig().getString("page.clan-name-color");
         bbShowOnLogin = getConfig().getBoolean("bb.show-on-login");
         bbSize = getConfig().getInt("bb.size");
+        bbLoginSize = getConfig().getInt("bb.login-size", bbSize);
         bbColor = getConfig().getString("bb.color");
         bbAccentColor = getConfig().getString("bb.accent-color");
         commandClan = getConfig().getString("commands.clan");
@@ -253,11 +292,14 @@ public final class SettingsManager {
         waitSecs = getConfig().getInt("clan.homebase-teleport-wait-secs");
         confirmationForPromote = getConfig().getBoolean("clan.confirmation-for-demote");
         confirmationForDemote = getConfig().getBoolean("clan.confirmation-for-promote");
+        percentageOnlineToDemote = getConfig().getDouble("clan.percentage-online-to-demote");
         clanTrustByDefault = getConfig().getBoolean("clan.trust-members-by-default");
         clanMinSizeToAlly = getConfig().getInt("clan.min-size-to-set-ally");
         clanMinSizeToRival = getConfig().getInt("clan.min-size-to-set-rival");
         clanMinLength = getConfig().getInt("clan.min-length");
         clanMaxLength = getConfig().getInt("clan.max-length");
+        clanMaxDescriptionLength = getConfig().getInt("clan.max-description-length");
+        clanMinDescriptionLength = getConfig().getInt("clan.min-description-length");
         clanFFOnByDefault = getConfig().getBoolean("clan.ff-on-by-default");
         tagMinLength = getConfig().getInt("tag.min-length");
         tagMaxLength = getConfig().getInt("tag.max-length");
@@ -300,6 +342,7 @@ public final class SettingsManager {
         kwRival = getConfig().getDouble("kill-weights.rival");
         kwNeutral = getConfig().getDouble("kill-weights.neutral");
         kwCivilian = getConfig().getDouble("kill-weights.civilian");
+        denySameIPKills = getConfig().getBoolean("kill-weights.deny-same-ip-kills");
         useMysql = getConfig().getBoolean("mysql.enable");
         host = getConfig().getString("mysql.host");
         port = getConfig().getInt("mysql.port");
@@ -388,6 +431,62 @@ public final class SettingsManager {
         return word.equalsIgnoreCase("clan") || word.equalsIgnoreCase(commandMore) || word.equalsIgnoreCase(commandDeny) || word.equalsIgnoreCase(commandAccept);
 
     }
+    
+    /**
+     * Checks if the upkeep is to be charged only from clans with the member fee enabled
+     * 
+     * @return
+     */
+    public boolean isChargeUpkeepOnlyIfMemberFeeEnabled() {
+    	return eChargeUpkeepOnlyIfMemberFeeEnabled;
+    }
+    
+    /**
+     * Checks if the upkeep should be multiplied by the clan size
+     * 
+     * @return 
+     */
+    public boolean isMultiplyUpkeepBySize() {
+        return eMultiplyUpkeepBySize;
+    }
+    
+    /**
+     * Checks if the upkeep is enabled
+     * 
+     * @return 
+     */
+    public boolean isClanUpkeep() {
+        return eClanUpkeepEnabled;
+    }
+    
+    /**
+     * Returns the upkeep
+     * 
+     * @return 
+     */
+    public double getClanUpkeep() {
+        if (eClanUpkeep < 0) {
+            eClanUpkeep = 0;
+        }
+        return eClanUpkeep;
+    }
+    
+    
+    /**
+     * Returns the max member fee allowed
+     * @return 
+     */
+    public double getMaxMemberFee() {
+        return eMaxMemberFee;
+    }
+    
+    /**
+     * Checks if the member fee is enabled
+     * @return 
+     */
+    public boolean isMemberFee() {
+        return eMemberFee;
+    }
 
     public boolean isAllowResetKdr() {
         return allowResetKdr;
@@ -395,6 +494,23 @@ public final class SettingsManager {
 
     public boolean isePurchaseResetKdr() {
         return ePurchaseResetKdr;
+    }
+    
+    /**
+     * Gets the price to pay for setting the member fee
+     * 
+     * @return the price
+     */
+    public double geteMemberFeeSetPrice() {
+        return eMemberFeeSetPrice;
+    }
+    
+    /**
+     * Do leaders need to pay for setting the member fee?
+     * @return true if so
+     */
+    public boolean isePurchaseMemberFeeSet() {
+        return ePurchaseMemberFeeSet;
     }
 
     /**
@@ -559,8 +675,48 @@ public final class SettingsManager {
     public boolean isRequireVerification() {
         return requireVerification;
     }
+    
+    public boolean isRejoinCooldown() {
+    	return rejoinCooldownEnabled;
+    }
+    
+    public int getRejoinCooldown() {
+    	return rejoinCooldown;
+    }
+    
+    public String getListDefault() {
+		return listDefault;
+	}
 
-    /**
+	public String getListSize() {
+		return listSize;
+	}
+
+	public String getListKdr() {
+		return listKdr;
+	}
+
+	public String getListName() {
+		return listName;
+	}
+
+	public String getListFounded() {
+		return listFounded;
+	}
+
+	public String getListActive() {
+		return listActive;
+	}
+
+	public String getListAsc() {
+		return listAsc;
+	}
+
+	public String getListDesc() {
+		return listDesc;
+	}
+
+	/**
      * @return the bannedPlayers
      */
     public List<String> getBannedPlayers() {
@@ -680,6 +836,13 @@ public final class SettingsManager {
     }
 
     /**
+     * @return the bbLoginSize
+     */
+    public int getBbLoginSize() {
+        return bbLoginSize;
+    }
+
+    /**
      * @return the bbColor
      */
     public String getBbColor() {
@@ -734,8 +897,32 @@ public final class SettingsManager {
     public int getClanMinSizeToRival() {
         return clanMinSizeToRival;
     }
+    
+    /**
+     * Returns the max length of the clan description
+     * 
+     * @return the max length
+     */
+    public int getClanMaxDescriptionLength() {
+    	if (clanMaxDescriptionLength > 255 || clanMaxDescriptionLength < 0) {
+    		clanMaxDescriptionLength = 255;
+    	}
+		return clanMaxDescriptionLength;
+	}
 
     /**
+     * Returns the min length of the clan description
+     * 
+     * @return the min length
+     */
+	public int getClanMinDescriptionLength() {
+		if (clanMinDescriptionLength < 0 || clanMinDescriptionLength > getClanMaxDescriptionLength()) {
+			clanMinDescriptionLength = 0;
+		}
+		return clanMinDescriptionLength;
+	}
+
+	/**
      * @return the clanMinLength
      */
     public int getClanMinLength() {
@@ -1067,6 +1254,22 @@ public final class SettingsManager {
 
     public boolean isConfirmationForDemote() {
         return confirmationForDemote;
+    }
+    
+    /**
+     * Returns the min percentage of leaders online required to demote someone
+     * 
+     * @return the percentage
+     */
+    public double getPercentageOnlineToDemote() {
+        if (percentageOnlineToDemote <= 0 || percentageOnlineToDemote > 100) {
+            percentageOnlineToDemote = 100;
+        }
+        return percentageOnlineToDemote;
+    }
+
+    public boolean isDenySameIPKills() {
+        return denySameIPKills;
     }
 
     public boolean isUseColorCodeFromPrefix() {
